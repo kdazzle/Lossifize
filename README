@@ -1,0 +1,30 @@
+This program is a Work in Progress.
+
+It is a short and simple program aimed at making an image as lossy as possible.
+Unfortunately, this is really slow, because the only way to do this is perform an obscenely large amount of duplication.
+
+It also seems necessary to add some pixels to a file, because mere duplication doesn't seem to do the trick in
+any reasonable amount of time. This adds to the complexity, of course: one random rgb pixel is generated at a random
+(x,y) location each time the image is duplicated.
+
+This seems to screw up the file enough.
+
+Why don't I add all of the pixels at the beginning and then do the duplication?
+  That approach seems to break the compromise that I made when I introduced the random pixels in the first place.
+I'm not sure why.
+
+The process is:
+  Take a file
+  Make it a little smaller?
+  Duplicate that file
+  Add a random pixel at a random location
+  Duplicate the duplicate
+  Add a random pixel at a random location
+  Duplicate the duplicate of the duplicate
+  Add a random pixel at a random location
+  ...
+  ...
+
+Only the files at given intervals are kept. The rest are removed immediately.
+This will make your computer real slow without a restart.
+  

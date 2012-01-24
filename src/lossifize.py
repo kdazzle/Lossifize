@@ -11,7 +11,7 @@ __author__="Kyle Valade"
 __date__ ="$11-Dec-2011 4:32:20 PM$"
 
 def main(argv=None):
-    file = None
+    inputFile = None
     help = None
     copies = None
 
@@ -26,7 +26,7 @@ def main(argv=None):
                 print help
             elif opt in ("-f", "--file"):
                 argList['file'] = arg
-                print "File: ", file
+                print "File: ", inputFile
             elif opt in ("-c", "--copies"):
                 argList['copies'] = int(arg)
                 print "Copies: ", copies
@@ -41,17 +41,14 @@ def main(argv=None):
     if not argList['copies'] and not help:
         print "How many copies do you want?"
     if argList['file'] and argList['copies']:
-        dir = "/home/k-dazzle/Documents/Programming/Lossifize/copies"
-    #    original = "%s/%s" % (dir, "Refinery.jpg")
+        outputDir = "/home/k-dazzle/Documents/Programming/Lossifize/copies"
+        lossifizeShit(argList, outputDir)
 
-
-    lossifizeShit(argList)
-
-def lossifizeShit(argList):
-    file = argList['file']
+def lossifizeShit(argList, outputDir):
+    inputFile = argList['file']
     copies = argList['copies']
 
-    originalImage = Image.open(file)
+    originalImage = Image.open(inputFile)
 
     size = originalImage.size
     newWidth = size[0] / 2
@@ -59,12 +56,12 @@ def lossifizeShit(argList):
 
     resizedImage = originalImage.copy()
     resizedImage = resizedImage.resize((newWidth, newHeight))
-    resizedImage.save("%s/%s" % (dir, "resized.jpg"))
+    resizedImage.save("%s/%s" % (outputDir, "resized.jpg"))
 
 
     comparableImage = resizedImage.copy()
     comparableImage = comparableImage.resize(size)
-    comparableImage.save("%s/%s" % (dir, "compareImage.jpg"))
+    comparableImage.save("%s/%s" % (outputDir, "compareImage.jpg"))
 
     toCopy = resizedImage.copy()
     count = copies
@@ -73,7 +70,7 @@ def lossifizeShit(argList):
         if i > 0:
             toCopy = Image.open(newLocation)
 
-        newLocation = "%s/%s.jpg" % (dir, i)
+        newLocation = "%s/%s.jpg" % (outputDir, i)
         toCopy = alterImage(toCopy)
         toCopy.save("%s" % (newLocation))
 
@@ -82,12 +79,12 @@ def lossifizeShit(argList):
         if (i == 0 or (i % 100 == 0)):
             pass
         else:
-            oldLocation = "%s/%s.jpg" % (dir, i-1)
+            oldLocation = "%s/%s.jpg" % (outputDir, i-1)
             os.remove(oldLocation)
 
     finalImage = Image.open(newLocation)
     finalImage = finalImage.resize(size)
-    finalImage.save("%s/%s-%s" % (dir, count, "finalImage.jpg"))
+    finalImage.save("%s/%s-%s" % (outputDir, count, "finalImage.jpg"))
 
 def getHelpText():
     help ="""

@@ -15,11 +15,13 @@ def main(argv=None):
     help = None
     copies = None
     directory = None
+    saveIncrement = None
 
-    argList = {'file': inputFile, 'copies': copies, 'directory': directory}
+    argList = {'file': inputFile, 'copies': copies, 'targetDirectory': directory,
+                'saveIncrement': saveIncrement}
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "f:c:t:h", ["file=", "copies=",
+        opts, args = getopt.getopt(sys.argv[1:], "f:c:t:i:h", ["file=", "copies=",
             "targetDirectory=", "help"])
         for opt, arg in opts:
             if opt in ("-h", "--help"):
@@ -32,13 +34,12 @@ def main(argv=None):
                 argList['copies'] = int(arg)
                 print "Copies: %s" % arg
             elif opt in ("-t", "--targetDirectory"):
-                argList['directory'] = arg
+                argList['targetDirectory'] = arg
                 print "Directory: %s" % (arg)
+            elif opt in ("-i"):
+                argList['saveIncrement'] = int(arg)
             else:
                 print "Incorrect arguments, -h for help."
-        else:
-            print "No arguments provided, -h for help"
-
 
     except getopt.GetoptError:
         sys.exit(2)
@@ -48,74 +49,93 @@ def main(argv=None):
             print "You need to enter a file -h for help"
         if not argList['copies']:
             print "How many copies do you want? -h for help"
-        if not argList['directory']:
+        if not argList['targetDirectory']:
             print "You need to specify a directory, -h for help"
 
-    if argList['file'] and argList['copies'] and argList['directory']:
+    if argList['file'] and argList['copies'] and argList['targetDirectory']:
         lossifize(argList)
 
 def getHelpText():
     help ="""
-    --copies            -c  (required)  the amount of copies that you want to
-                            make - at least 30,000 is recommended
-    --file              -f  (required) the file that you are trying to copy
-    --help              -h  help
-    --targetDirectory   -t  (required) the directory you are saving to
+    -c    --copies          (required)  the amount of copies that you want to
+                                make - at least 30,000 is recommended
+    -f    --file            (required) the file that you are trying to copy
+    -h    --help
+    -i    Save Increment    the increments to save files at. Eg: to save every
+                                thousandth picture, use -s 1000. Default is 100
+    -t    --targetDirectory (required) the directory you are saving to
     """
 
     return help
 
 def lossifize(argList):
+    """This function could definitely use some cleaning up"""
+
+    defaultSaveIncrement = 100
+
     inputFile = argList['file']
     copies = argList['copies']
-    targetDir = argList['directory']
+    targetDir = argList['targetDirectory']
+    saveIncrement = argList['saveIncrement']
+
+
+    if (not saveIncrement):
+        saveIncrement = defaultSaveIncrement
 
     originalImage = Image.open(inputFile)
 
-    size = originalImage.size
-    newWidth = size[0] / 2
-    newHeight = size[1] / 2
+    originalSize = originalImage.size
+
+    # resize to increase eventual image loss...? Possibly unnecessary.
+    newWidth = originalSize[0] / 2
+    newHeight = originalSize[1] / 2
 
     resizedImage = originalImage.copy()
     resizedImage = resizedImage.resize((newWidth, newHeight))
     resizedImage.save("%s/%s" % (targetDir, "resized.jpg"))
 
-
+    # create a halfsize image for comparing later images
     comparableImage = resizedImage.copy()
-    comparableImage = comparableImage.resize(size)
+    comparableImage = comparableImage.resize(originalSize)
     comparableImage.save("%s/%s" % (targetDir, "compareImage.jpg"))
 
-    toCopy = resizedImage.copy()
+    imageToCopy = resizedImage.copy()
     count = copies
 
     for i in range(count):
         if i > 0:
-            toCopy = Image.open(newLocation)
+            imageToCopy = Image.open(newLocation)
 
         newLocation = "%s/%s.jpg" % (targetDir, i)
-        toCopy = alterImage(toCopy)
-        toCopy.save("%s" % (newLocation))
+        imageToCopy = insertRandomPixel(imageToCopy)
+        imageToCopy.save("%s" % (newLocation))
 
-        print "copying image %s" % (i)
-
-        if (i == 0 or (i % 100 == 0)):
+        if (i == 0 or (i % saveIncrement == 0)):
             pass
         else:
             oldLocation = "%s/%s.jpg" % (targetDir, i-1)
             os.remove(oldLocation)
 
     finalImage = Image.open(newLocation)
-    finalImage = finalImage.resize(size)
+    finalImage = finalImage.resize(originalSize)
     finalImage.save("%s/%s-%s" % (targetDir, count, "finalImage.jpg"))
 
-def alterImage(image):
+def insertRandomPixel(image):
+    """Inserts a random pixel into the image in order to break up the jpeg
+    compression and eventually encourage errors. Certainly doesn't have to
+    be done every iteration."""
+    
     x = randint(0,(image.size[0]-1))
     y = randint(0,(image.size[1]-1))
+
+    # setting the upper values to 999 was actually kind of interesting, too
     red = randint(0, 255)
     green = randint(0, 255)
     blue = randint(0, 255)
 
-    print "Changing pixel (%s, %s) to (%s, %s, %s)" % (x, y, red, green, blue)
+    # uncomment this if you want the program to run even slower
+    # or if you want to see a record of the pixel changes
+    #print "Changing pixel (%s, %s) to (%s, %s, %s)" % (x, y, red, green, blue)
 
     image.putpixel((x,y), (red,green,blue))
 

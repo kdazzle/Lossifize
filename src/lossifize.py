@@ -19,50 +19,56 @@ def main(argv=None):
     argList = {'file': inputFile, 'copies': copies, 'directory': directory}
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "fct:h", ["file=", "help=",
-        "copies=", "targetDirectory"])
+        opts, args = getopt.getopt(sys.argv[1:], "f:c:t:h", ["file=", "copies=",
+            "targetDirectory=", "help"])
         for opt, arg in opts:
             if opt in ("-h", "--help"):
                 help = getHelpText()
                 print help
             elif opt in ("-f", "--file"):
                 argList['file'] = arg
-                print "File: ", inputFile
+                print "File: %s" % (arg)
             elif opt in ("-c", "--copies"):
                 argList['copies'] = int(arg)
-                print "Copies: ", copies
+                print "Copies: %s" % arg
             elif opt in ("-t", "--targetDirectory"):
                 argList['directory'] = arg
+                print "Directory: %s" % (arg)
             else:
                 print "Incorrect arguments, -h for help."
+        else:
+            print "No arguments provided, -h for help"
+
 
     except getopt.GetoptError:
         sys.exit(2)
 
-    if not argList['file'] and not help:
-        print "You need to enter a file"
-    if not argList['copies'] and not help:
-        print "How many copies do you want?"
-    if argList['file'] and argList['copies']:
-        lossifize(argList, outputDir)
+    if not help:
+        if not argList['file']:
+            print "You need to enter a file -h for help"
+        if not argList['copies']:
+            print "How many copies do you want? -h for help"
+        if not argList['directory']:
+            print "You need to specify a directory, -h for help"
+
+    if argList['file'] and argList['copies'] and argList['directory']:
+        lossifize(argList)
 
 def getHelpText():
     help ="""
-    --copies            -c  (required)  the amount of copies that you want to make - at
-                            least 30,000 is recommended
+    --copies            -c  (required)  the amount of copies that you want to
+                            make - at least 30,000 is recommended
     --file              -f  (required) the file that you are trying to copy
     --help              -h  help
     --targetDirectory   -t  (required) the directory you are saving to
-
-    Files will be saved into the copies folder in the Lossifize directory
     """
 
     return help
 
-def lossifize(argList, targetDir):
+def lossifize(argList):
     inputFile = argList['file']
     copies = argList['copies']
-    targetDir = argList['dir']
+    targetDir = argList['directory']
 
     originalImage = Image.open(inputFile)
 

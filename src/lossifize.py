@@ -14,15 +14,16 @@ def main(argv=None):
     inputFile = None
     help = None
     copies = None
-    directory = None
-    saveIncrement = None
+    targetDirectory = "../copies"
+    saveIncrement = 100
 
-    argList = {'file': inputFile, 'copies': copies, 'targetDirectory': directory,
+
+    argList = {'file': inputFile, 'copies': copies, 'targetDirectory': targetDirectory,
                 'saveIncrement': saveIncrement}
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], "f:c:t:i:h", ["file=", "copies=",
-            "targetDirectory=", "help"])
+            "help"])
         for opt, arg in opts:
             if opt in ("-h", "--help"):
                 help = getHelpText()
@@ -33,7 +34,7 @@ def main(argv=None):
             elif opt in ("-c", "--copies"):
                 argList['copies'] = int(arg)
                 print "Copies: %s" % arg
-            elif opt in ("-t", "--targetDirectory"):
+            elif opt in ("-t"):
                 argList['targetDirectory'] = arg
                 print "Directory: %s" % (arg)
             elif opt in ("-i"):
@@ -49,10 +50,8 @@ def main(argv=None):
             print "You need to enter a file -h for help"
         if not argList['copies']:
             print "How many copies do you want? -h for help"
-        if not argList['targetDirectory']:
-            print "You need to specify a directory, -h for help"
 
-    if argList['file'] and argList['copies'] and argList['targetDirectory']:
+    if argList['file'] and argList['copies']:
         lossifize(argList)
 
 def getHelpText():
@@ -60,10 +59,10 @@ def getHelpText():
     -c    --copies          (required)  the amount of copies that you want to
                                 make - at least 30,000 is recommended
     -f    --file            (required) the file that you are trying to copy
-    -h    --help
+    -h                      Show this stuff
     -i    Save Increment    the increments to save files at. Eg: to save every
-                                thousandth picture, use -s 1000. Default is 100
-    -t    --targetDirectory (required) the directory you are saving to
+                                thousandth picture, use -i 1000. Default is 100
+    -t                      the directory you are saving to. Defaults to ./copies
     """
 
     return help
@@ -71,16 +70,10 @@ def getHelpText():
 def lossifize(argList):
     """This function could definitely use some cleaning up"""
 
-    defaultSaveIncrement = 100
-
     inputFile = argList['file']
     copies = argList['copies']
     targetDir = argList['targetDirectory']
     saveIncrement = argList['saveIncrement']
-
-
-    if (not saveIncrement):
-        saveIncrement = defaultSaveIncrement
 
     originalImage = Image.open(inputFile)
 

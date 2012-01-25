@@ -1,7 +1,7 @@
 This program is a Work in Progress. As such, command line calls will be ugly.
 
 To call the program, do something like this:
-  python ./lossifize.py -f /path/to/file -t path/to/save/dir -c 30000
+  python ./lossifize.py -f /path/to/file -c 30000
 
 or do python ./lossifize.py -h for help
 
@@ -14,10 +14,6 @@ any reasonable amount of time. This adds to the complexity, of course: one rando
 (x,y) location each time the image is duplicated.
 
 This seems to screw up the file enough.
-
-Why don't I add all of the pixels at the beginning and then do the duplication?
-  That approach seems to break the compromise that I made when I introduced the random pixels in the first place.
-I'm not sure why.
 
 The process is:
   Take a file
@@ -33,4 +29,3 @@ The process is:
 
 Only the files at given intervals are kept. The rest are removed immediately.
 This will make your computer real slow without a restart.
-  

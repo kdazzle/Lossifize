@@ -15,7 +15,7 @@ def main(argv=None):
     help = None
     copies = None
     targetDirectory = "../copies"
-    saveIncrement = 100
+    saveIncrement = None
 
 
     argList = {'file': inputFile, 'copies': copies, 'targetDirectory': targetDirectory,
@@ -55,14 +55,18 @@ def main(argv=None):
         lossifize(argList)
 
 def getHelpText():
-    help ="""
+    help = """
     -c    --copies          (required)  the amount of copies that you want to
                                 make - at least 30,000 is recommended
     -f    --file            (required) the file that you are trying to copy
     -h                      Show this stuff
     -i    Save Increment    the increments to save files at. Eg: to save every
-                                thousandth picture, use -i 1000. Default is 100
+                                thousandth picture, use -i 1000. Default is 10%
     -t                      the directory you are saving to. Defaults to ./copies
+
+
+	To call the program, do something like this:
+	  python ./lossifize.py -f /path/to/file -c 30000
     """
 
     return help
@@ -73,45 +77,87 @@ def lossifize(argList):
     inputFile = argList['file']
     copies = argList['copies']
     targetDir = argList['targetDirectory']
-    saveIncrement = argList['saveIncrement']
+    saveIncrement = getSaveIncrement(argList)
 
     originalImage = Image.open(inputFile)
-
     originalSize = originalImage.size
 
-    # resize to increase eventual image loss...? Possibly unnecessary.
+    smallerImage = createSmallerImage(originalImage, targetDir)
+
+    # immediately return the smaller image to its original size -
+    #   to give a control to the experiment
+    comparableImageFilepath = "%s/%s" % (targetDir, "compareImage.jpg")
+    copyImage(smallerImage, comparableImageFilepath, originalSize)
+
+    penultimateImagepath = performCopying(copies, saveIncrement, smallerImage, targetDir)
+
+    saveFinalImage(penultimateImagepath, originalSize, targetDir, copies)
+
+def getSaveIncrement(argList):
+    """Calculates the saveIncrement. Defaults to 10%. Returns an integer"""
+
+    saveIncrement = argList['saveIncrement']
+
+    if (saveIncrement == None):
+        copies = argList['copies']
+        saveIncrement = copies / 10
+
+    return saveIncrement
+
+def createSmallerImage(originalImage, targetDir):
+    """create an image that's half the size. This increases loss when it's resized later"""
+
+    originalSize = originalImage.size
+    smallerImageFilepath = "%s/%s" % (targetDir, "resized.jpg")
+    smallerDimensions = getSmallerDimensions(originalSize)
+    return copyImage(originalImage, smallerImageFilepath, smallerDimensions)
+
+def getSmallerDimensions(originalSize):
+    """Returns a tuple of (width, height). This is done to increase the lossiness
+    of the image when we return the image to its original size."""
+
     newWidth = originalSize[0] / 2
     newHeight = originalSize[1] / 2
 
-    resizedImage = originalImage.copy()
-    resizedImage = resizedImage.resize((newWidth, newHeight))
-    resizedImage.save("%s/%s" % (targetDir, "resized.jpg"))
+    return (newWidth, newHeight)
 
-    # create a halfsize image for comparing later images
-    comparableImage = resizedImage.copy()
-    comparableImage = comparableImage.resize(originalSize)
-    comparableImage.save("%s/%s" % (targetDir, "compareImage.jpg"))
+def copyImage(originalImage, targetPath, dimensions = None):
+    """Copies an image, saves it to the given filepath. Also resizes the image
+    if dimensions is specified. The copied image is returned."""
 
-    imageToCopy = resizedImage.copy()
-    count = copies
+    copiedImage = originalImage.copy()
 
-    for i in range(count):
-        if i > 0:
-            imageToCopy = Image.open(newLocation)
+    if (not dimensions == None):
+        copiedImage = copiedImage.resize(dimensions)
+        
+    copiedImage.save(targetPath)
 
-        newLocation = "%s/%s.jpg" % (targetDir, i)
+    return copiedImage
+
+def performCopying(copies, saveIncrement, smallerImage, targetDir):
+    """This is the function that does most of the work - makes all of the copies
+    of the image. Returns the location of the penultimate image."""
+    
+    imageToCopy = smallerImage.copy()
+    count = copies + 1
+
+    for i in xrange(1, count):
+        if i > 1:
+            imageToCopy = Image.open(currentFilepath)
+
+        currentFilepath = "%s/%s.jpg" % (targetDir, i)
         imageToCopy = insertRandomPixel(imageToCopy)
-        imageToCopy.save("%s" % (newLocation))
+        imageToCopy.save("%s" % currentFilepath)
 
-        if (i == 0 or (i % saveIncrement == 0)):
-            pass
+        # Don't delete the first image or an image at the specified increment
+        if (i == 1 or (i % saveIncrement == 0)):
+            print "saving image %s" % (i)
         else:
+            # otherwise, delete the previous image
             oldLocation = "%s/%s.jpg" % (targetDir, i-1)
             os.remove(oldLocation)
 
-    finalImage = Image.open(newLocation)
-    finalImage = finalImage.resize(originalSize)
-    finalImage.save("%s/%s-%s" % (targetDir, count, "finalImage.jpg"))
+    return currentFilepath
 
 def insertRandomPixel(image):
     """Inserts a random pixel into the image in order to break up the jpeg
@@ -133,6 +179,11 @@ def insertRandomPixel(image):
     image.putpixel((x,y), (red,green,blue))
 
     return image
+
+def saveFinalImage(imageLocation, originalSize, targetDir, count):
+    finalImage = Image.open(imageLocation)
+    finalImage = finalImage.resize(originalSize)
+    finalImage.save("%s/%s-%s" % (targetDir, count, "finalImage.jpg"))
 
 if __name__ == "__main__":
     main(sys.argv[1:])

@@ -1,4 +1,10 @@
-  Everyone is always talking about how jpegs are lossy, so I wanted to see how many saves it would take before any loss became noticeable. After hundreds of thousands of saves I couldn't see a difference, so I decided to force some deterioration.
+I know, I know, this program should just have been written by rotating the image and saving it or something,
+but I didn't know this when I wrote it. Below is the original readme.
+
+============================================
+
+Everyone is always talking about how jpegs are lossy, so I wanted to see how many saves it would take before any loss became noticeable.
+After hundreds of thousands of saves I couldn't see a difference, so I decided to force some deterioration.
 
 What is the program? 
 	It is an experiment aimed at making an image as lossy as possible. Unfortunately, this is really slow, because the only way to do this is to perform an obscenely large amount of duplication.
